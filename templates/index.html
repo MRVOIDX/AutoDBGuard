@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}AutoDBGuard – Risk-Aware SQL Execution{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-badge">AI-Powered SQL Safety</div>
+  <h1 class="hero-title">AutoDB<span style="-webkit-text-fill-color:var(--accent);background:none;">Guard</span></h1>
+  <p class="hero-subtitle">Risk-Aware SQL Execution System</p>
+  <p class="hero-description">
+    Speak plain English. AutoDBGuard translates your words into SQL,
+    then scores, validates, and safely executes — blocking dangerous operations before they cause harm.
+  </p>
+  <div class="hero-cta-row">
+    <a href="/app" class="btn btn-primary btn-lg">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Try the System
+    </a>
+    <a href="/wiki" class="btn btn-outline btn-lg">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      Read the Docs
+    </a>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hero-stat-val">5</div>
+      <div class="hero-stat-lbl">AI Agents</div>
+    </div>
+    <div class="hero-stat-divider"></div>
+    <div class="hero-stat">
+      <div class="hero-stat-val">4</div>
+      <div class="hero-stat-lbl">Risk Levels</div>
+    </div>
+    <div class="hero-stat-divider"></div>
+    <div class="hero-stat">
+      <div class="hero-stat-val">100%</div>
+      <div class="hero-stat-lbl">Audit Logged</div>
+    </div>
+    <div class="hero-stat-divider"></div>
+    <div class="hero-stat">
+      <div class="hero-stat-val">0</div>
+      <div class="hero-stat-lbl">Runaway Queries</div>
+    </div>
+  </div>
+</section>
+
+<section class="features" style="margin-top:2rem;">
+  <div class="features-header">
+    <h2 class="section-title">Everything you need to query safely</h2>
+    <p class="section-sub">Six layers of protection from natural language to database result.</p>
+  </div>
+  <div class="feature-grid">
+
+    <div class="card feature-card">
+      <div class="feature-icon-wrap">&#129504;</div>
+      <h3>LLM SQL Generation</h3>
+      <p>Describe what data you need in plain English. Groq's Llama&nbsp;3 model converts your words into a precise SQL query.</p>
+    </div>
+
+    <div class="card feature-card">
+      <div class="feature-icon-wrap">&#128269;</div>
+      <h3>Structural Analysis</h3>
+      <p>Every query is scanned for dangerous patterns — missing WHERE clauses, DROP commands, ALTER operations, and more.</p>
+    </div>
+
+    <div class="card feature-card">
+      <div class="feature-icon-wrap">&#128200;</div>
+      <h3>Execution Plan Review</h3>
+      <p>SQLite's EXPLAIN QUERY PLAN reveals full table scans and performance pitfalls before a single row is touched.</p>
+    </div>
+
+    <div class="card feature-card">
+      <div class="feature-icon-wrap">&#128737;</div>
+      <h3>Risk Scoring</h3>
+      <p>A numeric score maps your query to one of four risk levels — LOW, MEDIUM, HIGH, or CRITICAL — each with a tailored response.</p>
+    </div>
+
+    <div class="card feature-card">
+      <div class="feature-icon-wrap">&#128274;</div>
+      <h3>Policy Enforcement</h3>
+      <p>Dangerous queries are automatically blocked. High-risk queries are revised with safety guardrails. Safe queries execute cleanly.</p>
+    </div>
+
+    <div class="card feature-card">
+      <div class="feature-icon-wrap">&#9989;</div>
+      <h3>Safe Execution</h3>
+      <p>Only validated, low- or medium-risk queries actually run — with LIMIT auto-applied to prevent runaway results.</p>
+    </div>
+
+  </div>
+</section>
+
+<section class="flow-section">
+  <h2 class="section-title">5-Agent Pipeline</h2>
+  <p class="section-sub">Every query passes through all seven stages — nothing skips the queue.</p>
+  <div class="flow-steps">
+    <div class="flow-step">
+      <span class="step-num">1</span>
+      <span class="step-label">User Input</span>
+    </div>
+    <div class="flow-step">
+      <span class="step-num">2</span>
+      <span class="step-label">Orchestrator</span>
+    </div>
+    <div class="flow-step">
+      <span class="step-num">3</span>
+      <span class="step-label">SQL Generation</span>
+    </div>
+    <div class="flow-step">
+      <span class="step-num">4</span>
+      <span class="step-label">Structural Analysis</span>
+    </div>
+    <div class="flow-step">
+      <span class="step-num">5</span>
+      <span class="step-label">Plan Analysis</span>
+    </div>
+    <div class="flow-step">
+      <span class="step-num">6</span>
+      <span class="step-label">Risk Assessment</span>
+    </div>
+    <div class="flow-step">
+      <span class="step-num">7</span>
+      <span class="step-label">Policy &amp; Result</span>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}AutoDBGuard – Wiki{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>Wiki &amp; Documentation</h1>
+  <p class="page-sub">Everything you need to understand how AutoDBGuard works.</p>
+</div>
+
+<div class="wiki-grid">
+
+  <!-- What is SQL -->
+  <div class="card wiki-card">
+    <h2>&#128190; What is SQL?</h2>
+    <p>
+      <strong>SQL</strong> (Structured Query Language) is the standard language for talking to
+      relational databases. It lets you <em>create</em>, <em>read</em>, <em>update</em>, and
+      <em>delete</em> data &mdash; often abbreviated as <strong>CRUD</strong>.
+    </p>
+    <p>
+      A simple example: <code>SELECT * FROM users;</code> retrieves every row from the
+      <em>users</em> table. More complex queries can filter, sort, aggregate, and join multiple
+      tables in a single statement.
+    </p>
+    <h4>Common SQL commands</h4>
+    <ul>
+      <li><code>SELECT</code> &mdash; read data</li>
+      <li><code>INSERT</code> &mdash; add new rows</li>
+      <li><code>UPDATE</code> &mdash; modify existing rows</li>
+      <li><code>DELETE</code> &mdash; remove rows</li>
+      <li><code>DROP</code>   &mdash; delete an entire table (dangerous!)</li>
+      <li><code>ALTER</code>  &mdash; change table structure (dangerous!)</li>
+    </ul>
+  </div>
+
+  <!-- LLM Text-to-SQL -->
+  <div class="card wiki-card">
+    <h2>&#129504; LLM Text-to-SQL</h2>
+    <p>
+      Large Language Models (LLMs) like Meta&apos;s Llama&nbsp;3 can read and write code,
+      including SQL. <strong>Text-to-SQL</strong> is the task of converting a plain-English
+      question &mdash; &ldquo;show me all users from California&rdquo; &mdash; into a
+      syntactically correct SQL query.
+    </p>
+    <p>
+      AutoDBGuard sends your natural language prompt to the
+      <a href="https://groq.com" target="_blank">Groq</a> API with a system prompt that describes
+      the database schema. The LLM returns a SQL statement which the system then validates.
+    </p>
+    <h4>Why use an LLM for this?</h4>
+    <ul>
+      <li>No need to learn SQL syntax</li>
+      <li>Handles ambiguous phrasing gracefully</li>
+      <li>Works for complex multi-condition queries</li>
+    </ul>
+  </div>
+
+  <!-- Risks of AI-generated SQL -->
+  <div class="card wiki-card">
+    <h2>&#9888; Risks of AI-Generated SQL</h2>
+    <p>
+      LLMs are powerful but imperfect. Without safety guardrails, they can produce queries that
+      accidentally &mdash; or maliciously &mdash; cause serious damage.
+    </p>
+    <ul>
+      <li>
+        <strong>Prompt injection:</strong> A user types &ldquo;show users, then drop all tables&rdquo;
+        and the LLM dutifully generates <code>DROP TABLE users</code>.
+      </li>
+      <li>
+        <strong>Unbounded deletes:</strong> The LLM might write <code>DELETE FROM users</code>
+        without a WHERE clause, wiping the entire table.
+      </li>
+      <li>
+        <strong>Hallucinated columns:</strong> The model may reference columns that don&apos;t exist,
+        causing runtime errors.
+      </li>
+      <li>
+        <strong>Performance bombs:</strong> A <code>SELECT *</code> on a million-row table can lock
+        up the database.
+      </li>
+    </ul>
+    <p>
+      AutoDBGuard intercepts all of these with structural analysis, execution plan review, and
+      policy enforcement before a single row is affected.
+    </p>
+  </div>
+
+  <!-- Risk Scoring -->
+  <div class="card wiki-card">
+    <h2>&#128200; What is Risk Scoring?</h2>
+    <p>
+      Risk scoring assigns a <strong>numeric score</strong> (0&ndash;200+) to each generated query
+      based on detected patterns. The higher the score, the more dangerous the query.
+    </p>
+    <table class="wiki-table">
+      <thead>
+        <tr><th>Pattern Detected</th><th>Points Added</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>DROP or ALTER statement</td><td>+100</td></tr>
+        <tr><td>DELETE without WHERE</td><td>+80</td></tr>
+        <tr><td>UPDATE without WHERE</td><td>+70</td></tr>
+        <tr><td>SELECT without LIMIT</td><td>+30</td></tr>
+        <tr><td>Full table scan</td><td>+20</td></tr>
+      </tbody>
+    </table>
+    <p>
+      The score accumulates across all detected patterns, giving a comprehensive picture of how
+      risky the query really is.
+    </p>
+  </div>
+
+  <!-- Risk Levels -->
+  <div class="card wiki-card">
+    <h2>&#127881; Risk Levels Explained</h2>
+
+    <div class="risk-level risk-low">
+      <div class="risk-badge">LOW</div>
+      <div>
+        <strong>Score: 0 &ndash; 20</strong><br>
+        Query is safe. It has a LIMIT clause and no dangerous patterns.
+        AutoDBGuard executes it immediately and returns results.
+      </div>
+    </div>
+
+    <div class="risk-level risk-medium">
+      <div class="risk-badge">MEDIUM</div>
+      <div>
+        <strong>Score: 21 &ndash; 50</strong><br>
+        Query is acceptable but has minor concerns (e.g. no LIMIT, small table scan).
+        AutoDBGuard adds a LIMIT and executes with a note.
+      </div>
+    </div>
+
+    <div class="risk-level risk-high">
+      <div class="risk-badge">HIGH</div>
+      <div>
+        <strong>Score: 51 &ndash; 80</strong><br>
+        Query needs revision. A safer version is shown with guardrails applied.
+        <em>Execution does not happen automatically</em> &mdash; you must confirm.
+      </div>
+    </div>
+
+    <div class="risk-level risk-critical">
+      <div class="risk-badge">CRITICAL</div>
+      <div>
+        <strong>Score: 81+</strong><br>
+        Query is blocked entirely. Common causes: DROP, ALTER, or mass DELETE/UPDATE.
+        No execution under any circumstances.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

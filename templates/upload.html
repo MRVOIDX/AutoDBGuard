@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% block title %}AutoDBGuard – Import Data{% endblock %}
+
+{% block content %}
+<div class="upload-page">
+
+  <!-- Header -->
+  <div class="upload-header">
+    <div class="upload-header-eyebrow">AI-Powered Data Import</div>
+    <h1 class="upload-header-title">Import Your Data</h1>
+    <p class="upload-header-sub">
+      Upload a CSV, TSV, or JSON file — AI will detect column types, clean names,
+      and organize everything into a queryable SQLite table instantly.
+    </p>
+  </div>
+
+  <!-- Step Indicator -->
+  <div class="upload-steps" id="uploadSteps">
+    <div class="upload-step active" id="step1">
+      <div class="step-circle">1</div>
+      <div class="step-label">Select File</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="upload-step" id="step2">
+      <div class="step-circle">2</div>
+      <div class="step-label">AI Analysis</div>
+    </div>
+    <div class="step-connector"></div>
+    <div class="upload-step" id="step3">
+      <div class="step-circle">3</div>
+      <div class="step-label">Done</div>
+    </div>
+  </div>
+
+  <!-- Main card -->
+  <div class="upload-card">
+
+    <!-- ── STEP 1: Drop Zone ─────────────────────────────────── -->
+    <div id="zonePanel">
+      <div class="drop-zone" id="dropZone"
+           ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+        <div class="drop-icon">&#128229;</div>
+        <div class="drop-title">Drag &amp; drop your file here</div>
+        <div class="drop-sub">or</div>
+        <label class="btn btn-primary" for="fileInput" style="cursor:pointer;">
+          &#128193; Browse File
+        </label>
+        <input type="file" id="fileInput"
+               accept=".csv,.tsv,.json,.jsonl,.ndjson,.xlsx,.xls,.yaml,.yml,.xml,.sql"
+               style="display:none;" onchange="onFileSelected(event)">
+        <div class="drop-formats">
+          <span class="fmt-badge">CSV</span>
+          <span class="fmt-badge">TSV</span>
+          <span class="fmt-badge">JSON</span>
+          <span class="fmt-badge fmt-badge--new">JSONL</span>
+          <span class="fmt-badge fmt-badge--new">Excel</span>
+          <span class="fmt-badge fmt-badge--new">YAML</span>
+          <span class="fmt-badge fmt-badge--new">XML</span>
+          <span class="fmt-badge fmt-badge--new">SQL</span>
+          <span class="drop-limit">Max 50,000 rows · 60 columns</span>
+        </div>
+      </div>
+
+      <!-- selected file preview -->
+      <div class="file-preview hidden" id="filePreview">
+        <div class="file-preview-icon">&#128196;</div>
+        <div class="file-preview-info">
+          <div class="file-preview-name" id="previewName"></div>
+          <div class="file-preview-size" id="previewSize"></div>
+        </div>
+        <button class="btn-ghost" onclick="clearFile()" title="Remove">&#10005;</button>
+      </div>
+
+      <div class="upload-error hidden" id="uploadError"></div>
+
+      <div class="upload-zone-footer">
+        <button class="btn btn-primary btn-lg" id="importBtn" onclick="startImport()" disabled>
+          &#9889; Import &amp; Organize with AI
+        </button>
+      </div>
+    </div>
+
+    <!-- ── STEP 2: Processing ─────────────────────────────────── -->
+    <div id="processingPanel" class="hidden">
+      <div class="processing-anim">
+        <div class="processing-spinner"></div>
+        <div class="processing-steps-list">
+          <div class="proc-step" id="proc1">&#128196; Reading file…</div>
+          <div class="proc-step" id="proc2">&#129302; AI is analyzing your schema…</div>
+          <div class="proc-step" id="proc3">&#128196; Creating table &amp; inserting rows…</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STEP 3: Results ────────────────────────────────────── -->
+    <div id="resultPanel" class="hidden">
+      <div class="result-banner">
+        <span class="result-checkmark">&#10003;</span>
+        <div>
+          <div class="result-title" id="resultTitle"></div>
+          <div class="result-sub" id="resultSub"></div>
+        </div>
+      </div>
+
+      <!-- AI schema decisions -->
+      <div class="result-section">
+        <div class="result-section-header">
+          <span>&#129302; AI Schema Decisions</span>
+          <span class="ai-badge-sm" id="aiBadge">AI organized</span>
+        </div>
+        <div class="schema-decision-wrap">
+          <div class="schema-table-name-row">
+            <span class="stn-label">Table name</span>
+            <code class="stn-value" id="schemaTableName"></code>
+          </div>
+          <table class="schema-col-table">
+            <thead>
+              <tr>
+                <th>Original Column</th>
+                <th>Clean Name</th>
+                <th>Type</th>
+              </tr>
+            </thead>
+            <tbody id="schemaColBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Data preview -->
+      <div class="result-section">
+        <div class="result-section-header">
+          <span>&#128202; Data Preview <span id="previewCountLabel" style="color:var(--text-muted);font-size:.8rem;"></span></span>
+        </div>
+        <div class="data-preview-wrap">
+          <table class="data-preview-table" id="dataPreviewTable">
+            <thead><tr id="dataPreviewHead"></tr></thead>
+            <tbody id="dataPreviewBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="result-actions">
+        <a href="/database" class="btn btn-primary">&#128202; View in Database Browser</a>
+        <button class="btn btn-outline" onclick="resetUpload()">&#8635; Upload Another File</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Tips -->
+  <div class="upload-tips" id="uploadTips">
+    <div class="tip-card">
+      <div class="tip-icon">&#128196;</div>
+      <div class="tip-title">CSV / TSV</div>
+      <div class="tip-body">First row must be headers. Comma-separated (CSV) or tab-separated (TSV). UTF-8 or Latin-1 encoding.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">&#128218;</div>
+      <div class="tip-title">Excel (.xlsx / .xls)</div>
+      <div class="tip-body">First row treated as headers. Active sheet is imported. Empty cells become blank strings.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">&#123;&#125;</div>
+      <div class="tip-title">JSON / JSONL</div>
+      <div class="tip-body">JSON: array of objects or wrapper with <code>data</code>/<code>records</code> key. JSONL/NDJSON: one JSON object per line.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">&#128196;</div>
+      <div class="tip-title">YAML</div>
+      <div class="tip-body">Must be a list of objects. Wrapper keys like <code>data</code> or <code>records</code> are unwrapped automatically.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">&#60;/&#62;</div>
+      <div class="tip-title">XML</div>
+      <div class="tip-body">Each direct child of the root element becomes a row. Attributes and sub-elements become columns.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">&#128190;</div>
+      <div class="tip-title">SQL Dump</div>
+      <div class="tip-body">Parses <code>INSERT INTO … VALUES (…)</code> statements. Useful for migrating data from MySQL/PostgreSQL dumps.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">&#129302;</div>
+      <div class="tip-title">AI Organizes</div>
+      <div class="tip-body">AI infers column types (TEXT/INTEGER/REAL), cleans messy names, and picks a descriptive table name automatically.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">&#128202;</div>
+      <div class="tip-title">Queryable</div>
+      <div class="tip-body">Imported tables appear in the Database Browser and can be queried with natural language in the main App.</div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='upload.js') }}"></script>
+{% endblock %}

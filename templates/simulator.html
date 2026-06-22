@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block title %}AutoDBGuard – Risk Simulator{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="db-header-eyebrow">Interactive Tool</div>
+    <h1>Risk Score Simulator</h1>
+    <p class="page-sub">Type any SQL query and watch the risk score update live — no AI required.</p>
+  </div>
+</div>
+
+<div class="sim-layout">
+
+  <!-- Left: SQL Input + Injection Demo -->
+  <div class="sim-left">
+
+    <div class="card">
+      <label class="form-label">Enter any SQL query</label>
+      <textarea id="simInput" class="form-textarea" rows="7"
+        placeholder="Type SQL here to see its risk score…&#10;&#10;e.g. SELECT * FROM users WHERE city = 'New York';"
+        oninput="simUpdate()"></textarea>
+      <div class="btn-row" style="margin-top:.75rem;">
+        <button class="btn btn-outline btn-sm" onclick="simClear()">Clear</button>
+      </div>
+    </div>
+
+    <!-- Attack Examples -->
+    <div class="card" style="margin-top:0;">
+      <h3 class="card-title">&#128299; Injection Attack Demo</h3>
+      <p style="color:var(--text-muted);font-size:.85rem;margin-bottom:1rem;">
+        These are real SQL injection patterns. Click any to load it and see why it's dangerous.
+      </p>
+      <div class="attack-list" id="attackList"></div>
+    </div>
+
+  </div>
+
+  <!-- Right: Live Score -->
+  <div class="sim-right">
+
+    <div class="card sim-score-card">
+      <div class="sim-score-label">RISK SCORE</div>
+      <div class="sim-score-num" id="simScore">0</div>
+      <div class="sim-level-badge" id="simLevel">LOW</div>
+      <div class="sim-score-bar-wrap">
+        <div class="sim-score-bar" id="simScoreBar"></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:1.25rem;">
+      <h3 class="card-title">&#128202; Risk Factor Breakdown</h3>
+      <div id="simBreakdown" class="sim-breakdown-list"></div>
+    </div>
+
+    <div class="card" style="margin-top:1.25rem;">
+      <h3 class="card-title">&#128269; Structure Analysis</h3>
+      <div id="simStructure" class="analysis-grid"></div>
+    </div>
+
+    <div class="card" style="margin-top:1.25rem;">
+      <h3 class="card-title">&#9878; What would happen?</h3>
+      <div id="simDecision" class="sim-decision"></div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='simulator.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block title %}AutoDBGuard – Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-flex">
+  <div>
+    <div class="page-eyebrow">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Live Analytics
+    </div>
+    <h1>Dashboard</h1>
+    <p class="page-sub">Query activity, risk distribution, and database health at a glance.</p>
+  </div>
+  <button class="btn btn-outline" onclick="loadStats()">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.491-6.5"/></svg>
+    Refresh
+  </button>
+</div>
+
+<!-- Top Stats -->
+<div class="dash-stats-row" id="topStats">
+  <div class="dash-stat-card">
+    <div class="dash-stat-icon" style="background:var(--accent-glow);color:var(--accent);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <div class="dash-stat-body">
+      <div class="dash-stat-val" id="dTotalQueries">—</div>
+      <div class="dash-stat-lbl">Total Queries</div>
+    </div>
+  </div>
+  <div class="dash-stat-card">
+    <div class="dash-stat-icon" style="background:var(--green-bg);color:var(--green);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="dash-stat-body">
+      <div class="dash-stat-val" id="dExecuted">—</div>
+      <div class="dash-stat-lbl">Executed</div>
+    </div>
+  </div>
+  <div class="dash-stat-card">
+    <div class="dash-stat-icon" style="background:var(--red-bg);color:var(--red);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+    </div>
+    <div class="dash-stat-body">
+      <div class="dash-stat-val" id="dBlocked">—</div>
+      <div class="dash-stat-lbl">Blocked</div>
+    </div>
+  </div>
+  <div class="dash-stat-card">
+    <div class="dash-stat-icon" style="background:var(--yellow-bg);color:var(--yellow);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <div class="dash-stat-body">
+      <div class="dash-stat-val" id="dAvgScore">—</div>
+      <div class="dash-stat-lbl">Avg Risk Score</div>
+    </div>
+  </div>
+  <div class="dash-stat-card">
+    <div class="dash-stat-icon" style="background:var(--green-bg);color:var(--green);">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+    </div>
+    <div class="dash-stat-body">
+      <div class="dash-stat-val" id="dRevenue">—</div>
+      <div class="dash-stat-lbl">Total Revenue</div>
+    </div>
+  </div>
+</div>
+
+<div class="dash-grid">
+
+  <!-- Risk Distribution -->
+  <div class="card dash-card">
+    <h3 class="card-title">
+      <span class="card-icon card-icon-orange">&#128737;</span>
+      Risk Level Distribution
+    </h3>
+    <div id="riskChart" class="bar-chart"></div>
+  </div>
+
+  <!-- Action Distribution -->
+  <div class="card dash-card">
+    <h3 class="card-title">
+      <span class="card-icon card-icon-blue">&#9878;</span>
+      Query Decisions
+    </h3>
+    <div id="actionChart" class="bar-chart"></div>
+  </div>
+
+  <!-- Database Tables -->
+  <div class="card dash-card">
+    <h3 class="card-title">
+      <span class="card-icon card-icon-muted">&#128190;</span>
+      Database Tables
+    </h3>
+    <div id="dbTableStats" class="db-table-stats"></div>
+  </div>
+
+  <!-- Order Status -->
+  <div class="card dash-card">
+    <h3 class="card-title">
+      <span class="card-icon card-icon-green">&#128666;</span>
+      Order Status Breakdown
+    </h3>
+    <div id="orderStatusChart" class="bar-chart"></div>
+  </div>
+
+  <!-- Product Categories -->
+  <div class="card dash-card">
+    <h3 class="card-title">
+      <span class="card-icon card-icon-blue">&#127978;</span>
+      Products by Category
+    </h3>
+    <div id="productCatChart" class="bar-chart"></div>
+  </div>
+
+</div>
+
+<!-- Recent Query History -->
+<div class="card" style="margin-top:1.25rem;">
+  <h3 class="card-title">
+    <span class="card-icon card-icon-muted">&#128221;</span>
+    Recent Query History
+  </h3>
+  <div class="db-table-wrap">
+    <table class="results-table" id="recentTable">
+      <thead>
+        <tr>
+          <th>Query</th>
+          <th>Risk Level</th>
+          <th>Score</th>
+          <th>Decision</th>
+          <th>Time</th>
+        </tr>
+      </thead>
+      <tbody id="recentBody">
+        <tr><td colspan="5" style="color:var(--text-muted);text-align:center;padding:2rem;">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='dashboard.js') }}"></script>
+{% endblock %}

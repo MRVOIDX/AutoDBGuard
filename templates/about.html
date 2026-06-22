@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}AutoDBGuard – About{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>About AutoDBGuard</h1>
+  <p class="page-sub">A student-built system for safe, AI-assisted database queries.</p>
+</div>
+
+<div class="about-grid">
+
+  <!-- Project Description -->
+  <div class="card about-card">
+    <h2>&#128196; Project Description</h2>
+    <p>
+      <strong>AutoDBGuard</strong> is a risk-aware SQL execution system that bridges the gap between
+      natural language and safe database access. It was built to demonstrate how large language models
+      can generate SQL from English descriptions &mdash; and how those queries can be automatically
+      validated and made safe before execution.
+    </p>
+    <p>
+      The system implements a multi-agent pipeline &mdash; each function acting as a specialized
+      &ldquo;agent&rdquo; &mdash; to progressively analyse, score, and enforce safety policies on
+      every generated query. This architecture mirrors real-world AI safety workflows in a
+      simple, educational format.
+    </p>
+    <p>
+      Whether you&apos;re a student learning about SQL, AI, or database security, AutoDBGuard shows
+      the full journey from a human question to a safely executed database result.
+    </p>
+  </div>
+
+  <!-- Tech Stack -->
+  <div class="card about-card">
+    <h2>&#9881; Technologies Used</h2>
+    <div class="tech-grid">
+      <div class="tech-item">
+        <span class="tech-icon">&#128013;</span>
+        <div>
+          <strong>Python 3</strong>
+          <p>Core backend language &mdash; clean, readable, and beginner-friendly.</p>
+        </div>
+      </div>
+      <div class="tech-item">
+        <span class="tech-icon">&#128293;</span>
+        <div>
+          <strong>Flask</strong>
+          <p>Lightweight web framework for routing and serving templates.</p>
+        </div>
+      </div>
+      <div class="tech-item">
+        <span class="tech-icon">&#128190;</span>
+        <div>
+          <strong>SQLite 3</strong>
+          <p>Embedded, serverless SQL database. No separate DB server required.</p>
+        </div>
+      </div>
+      <div class="tech-item">
+        <span class="tech-icon">&#129504;</span>
+        <div>
+          <strong>Groq API (Llama 3)</strong>
+          <p>Ultra-fast LLM inference for natural language to SQL conversion.</p>
+        </div>
+      </div>
+      <div class="tech-item">
+        <span class="tech-icon">&#127760;</span>
+        <div>
+          <strong>HTML / CSS / JS</strong>
+          <p>Vanilla frontend &mdash; no frameworks, no build steps, easy to read.</p>
+        </div>
+      </div>
+      <div class="tech-item">
+        <span class="tech-icon">&#128260;</span>
+        <div>
+          <strong>requests</strong>
+          <p>Python HTTP library used to call the Groq REST API.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Architecture -->
+  <div class="card about-card full-width">
+    <h2>&#127959; Architecture &mdash; Agent Functions</h2>
+    <p>
+      Each &ldquo;agent&rdquo; in AutoDBGuard is a plain Python function. There are no microservices,
+      no message queues, no containers &mdash; just clean, composable functions called in sequence
+      by the orchestrator.
+    </p>
+    <div class="arch-grid">
+      <div class="arch-item">
+        <code>orchestrator()</code>
+        <p>Coordinates all agents and returns a unified result to the frontend.</p>
+      </div>
+      <div class="arch-item">
+        <code>generate_sql_with_groq()</code>
+        <p>Sends the user&apos;s natural language to Groq and extracts the SQL response.</p>
+      </div>
+      <div class="arch-item">
+        <code>analyze_structure()</code>
+        <p>Inspects the SQL text for dangerous keywords and missing safety clauses.</p>
+      </div>
+      <div class="arch-item">
+        <code>analyze_execution_plan()</code>
+        <p>Runs EXPLAIN QUERY PLAN to detect full table scans at zero cost.</p>
+      </div>
+      <div class="arch-item">
+        <code>calculate_risk()</code>
+        <p>Accumulates a numeric risk score and maps it to a named risk level.</p>
+      </div>
+      <div class="arch-item">
+        <code>enforce_policy()</code>
+        <p>Blocks, revises, or clears the query for execution based on risk level.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

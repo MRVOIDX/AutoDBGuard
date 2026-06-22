@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}AutoDBGuard – SQL Interface{% endblock %}
+
+{% block content %}
+<div class="page-header page-header-flex">
+  <div>
+    <div class="page-eyebrow">
+      <svg width="12" height="12" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10 1.5L3 4.5V9C3 13.25 6.04 17.21 10 18.5C13.96 17.21 17 13.25 17 9V4.5L10 1.5Z" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M7 10L9 12L13 8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      5-Agent Pipeline Active
+    </div>
+    <h1>SQL Query Interface</h1>
+    <p class="page-sub">Describe what you need in plain English — AutoDBGuard handles the rest.</p>
+  </div>
+  <a href="/database" class="btn btn-outline">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+    Browse Data
+  </a>
+</div>
+
+<!-- Agent pipeline mini-tracker -->
+<div class="agent-pipeline" id="agentPipeline">
+  <div class="agent-step" id="astep-1">
+    <div class="agent-step-dot"></div>
+    <span>SQL Gen</span>
+  </div>
+  <div class="agent-connector"></div>
+  <div class="agent-step" id="astep-2">
+    <div class="agent-step-dot"></div>
+    <span>Structure</span>
+  </div>
+  <div class="agent-connector"></div>
+  <div class="agent-step" id="astep-3">
+    <div class="agent-step-dot"></div>
+    <span>Exec Plan</span>
+  </div>
+  <div class="agent-connector"></div>
+  <div class="agent-step" id="astep-4">
+    <div class="agent-step-dot"></div>
+    <span>Risk Score</span>
+  </div>
+  <div class="agent-connector"></div>
+  <div class="agent-step" id="astep-5">
+    <div class="agent-step-dot"></div>
+    <span>Policy</span>
+  </div>
+</div>
+
+<div class="app-layout">
+
+  <!-- Left: Main Query Panel -->
+  <div class="app-main">
+
+    <!-- Input Card -->
+    <div class="card query-card">
+      <label for="queryInput" class="form-label">Natural Language Query</label>
+      <textarea id="queryInput" class="form-textarea"
+        placeholder="e.g. Show me all users from New York&#10;e.g. Find products under $50&#10;e.g. How many completed orders are there?"
+        rows="4"></textarea>
+      <div class="btn-row">
+        <button id="runBtn" class="btn btn-primary" onclick="runQuery()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Run Query
+        </button>
+        <button class="btn btn-outline" onclick="clearAll()">Clear</button>
+        <span class="hint-text">
+          <kbd>Ctrl</kbd>+<kbd>Enter</kbd> to run
+        </span>
+      </div>
+    </div>
+
+    <div id="errorBanner" class="error-banner hidden"></div>
+    <div id="loadingIndicator" class="loading hidden">
+      <div class="spinner"></div>
+      <span>Processing through all agents&hellip;</span>
+    </div>
+
+    <div id="resultsSection" class="hidden">
+
+      <!-- Explanation -->
+      <div class="card result-card explanation-card">
+        <h3 class="card-title">
+          <span class="card-icon card-icon-blue">&#129504;</span>
+          AI Explanation
+        </h3>
+        <p id="explanationText" class="explanation-text"></p>
+      </div>
+
+      <!-- SQL -->
+      <div class="card result-card">
+        <h3 class="card-title">
+          <span class="card-icon card-icon-muted">&#128196;</span>
+          Generated SQL
+        </h3>
+        <div id="sqlDisplay"></div>
+      </div>
+
+      <!-- Structural Analysis -->
+      <div class="card result-card">
+        <h3 class="card-title">
+          <span class="card-icon card-icon-blue">&#128269;</span>
+          Structural Analysis
+        </h3>
+        <div id="structuralAnalysis"></div>
+      </div>
+
+      <!-- Execution Plan -->
+      <div class="card result-card">
+        <h3 class="card-title">
+          <span class="card-icon card-icon-yellow">&#128200;</span>
+          Execution Plan
+        </h3>
+        <div id="executionPlan"></div>
+      </div>
+
+      <!-- Risk Score -->
+      <div class="card result-card">
+        <h3 class="card-title">
+          <span class="card-icon card-icon-orange">&#128737;</span>
+          Risk Assessment
+        </h3>
+        <div id="riskAssessment"></div>
+      </div>
+
+      <!-- Decision -->
+      <div class="card result-card">
+        <h3 class="card-title">
+          <span class="card-icon card-icon-green">&#9878;</span>
+          Decision
+        </h3>
+        <div id="decisionPanel"></div>
+      </div>
+
+      <!-- Query Results -->
+      <div id="queryResultsCard" class="card result-card hidden">
+        <div class="results-header">
+          <h3 class="card-title" style="margin-bottom:0;">
+            <span class="card-icon card-icon-green">&#128202;</span>
+            Query Results
+          </h3>
+          <button class="btn btn-outline btn-sm" onclick="exportCSV()">&#8659; Export CSV</button>
+        </div>
+        <div id="queryResults"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Right: History Sidebar -->
+  <div class="app-sidebar">
+    <div class="card history-panel">
+      <div class="history-header">
+        <span class="history-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+          Query History
+        </span>
+        <button class="btn-ghost" onclick="loadHistory()" title="Refresh">&#8635;</button>
+      </div>
+      <div id="historyList" class="history-list">
+        <div class="history-empty">No queries yet.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── Override Approval Modal ───────────────────────────────── -->
+<div class="modal-overlay hidden" id="approvalModal" onclick="closeApprovalOutside(event)">
+  <div class="modal-box approval-modal-box">
+    <div class="approval-modal-header">
+      <div class="approval-modal-icon">&#9888;</div>
+      <div>
+        <h2 class="approval-modal-title">Override Safety Block</h2>
+        <p class="approval-modal-sub">AutoDBGuard flagged this query as dangerous</p>
+      </div>
+      <button class="modal-close" onclick="closeApprovalModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="approval-reason-box">
+        <div class="approval-reason-label">&#128683; Reason for Block</div>
+        <div id="approvalReason"></div>
+      </div>
+      <div class="approval-sql-label">SQL that will be executed if you approve:</div>
+      <pre class="code-block code-block-warning" id="approvalSql" style="max-height:140px;overflow:auto;"></pre>
+      <div class="approval-warning-box">
+        <strong>&#9888; Final Warning:</strong> Force-executing this query may cause
+        <strong>irreversible data loss or schema corruption</strong>.
+        This override will be recorded in Query History.
+      </div>
+      <div class="approval-password-wrap">
+        <label class="approval-password-label" for="overridePassword">
+          &#128272; Enter override password to confirm:
+        </label>
+        <input
+          type="password"
+          id="overridePassword"
+          class="approval-password-input"
+          placeholder="Password"
+          autocomplete="off"
+          onkeydown="if(event.key==='Enter') confirmOverride()"
+        />
+        <div class="approval-password-error hidden" id="overridePasswordError">
+          &#10060; Incorrect password. Access denied.
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeApprovalModal()" style="min-width:140px;">
+        &#128274; Cancel – Stay Safe
+      </button>
+      <button class="btn btn-danger" id="overrideConfirmBtn" onclick="confirmOverride()" style="min-width:160px;">
+        &#9889; Override & Execute
+      </button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+{% endblock %}

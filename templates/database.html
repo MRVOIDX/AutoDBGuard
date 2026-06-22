@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}AutoDBGuard – Database Manager{% endblock %}
+
+{% block content %}
+
+<div class="db-header">
+  <div>
+    <div class="db-header-eyebrow">SQLite Inspector</div>
+    <h1 class="db-header-title">Database Manager</h1>
+    <p class="db-header-sub">Live view of <code>database.db</code> — browse, add, edit, and remove records.</p>
+  </div>
+  <button class="btn btn-primary" id="addBtn" onclick="openAddModal()">
+    <span style="font-size:1.1em;">+</span> <span id="addBtnLabel">Add User</span>
+  </button>
+</div>
+
+<!-- Stats Row -->
+<div class="db-stats-row" id="statsRow">
+  <div class="db-stat-card">
+    <div class="db-stat-icon" style="background:rgba(88,166,255,.15);color:#58a6ff;">&#128202;</div>
+    <div>
+      <div class="db-stat-value" id="statRows">—</div>
+      <div class="db-stat-label">Rows in Table</div>
+    </div>
+  </div>
+  <div class="db-stat-card">
+    <div class="db-stat-icon" style="background:rgba(63,185,80,.15);color:#3fb950;">&#128190;</div>
+    <div>
+      <div class="db-stat-value" id="statSize">—</div>
+      <div class="db-stat-label">Database Size</div>
+    </div>
+  </div>
+  <div class="db-stat-card">
+    <div class="db-stat-icon" style="background:rgba(210,153,34,.15);color:#d29922;">&#128203;</div>
+    <div>
+      <div class="db-stat-value" id="statTables">—</div>
+      <div class="db-stat-label">Total Tables</div>
+    </div>
+  </div>
+  <div class="db-stat-card">
+    <div class="db-stat-icon" style="background:rgba(248,81,73,.15);color:#f85149;">&#128336;</div>
+    <div>
+      <div class="db-stat-value" id="statUpdated">—</div>
+      <div class="db-stat-label">Last Refreshed</div>
+    </div>
+  </div>
+</div>
+
+<!-- Table Tabs -->
+<div class="db-tab-bar" id="tabBar">
+  <button class="db-tab active" id="tab-users"         onclick="switchTable('users')">
+    <span class="db-tab-icon">&#128100;</span> Users
+    <span class="db-tab-count" id="count-users"></span>
+  </button>
+  <button class="db-tab" id="tab-products"             onclick="switchTable('products')">
+    <span class="db-tab-icon">&#128230;</span> Products
+    <span class="db-tab-count" id="count-products"></span>
+  </button>
+  <button class="db-tab" id="tab-orders"               onclick="switchTable('orders')">
+    <span class="db-tab-icon">&#128666;</span> Orders
+    <span class="db-tab-count" id="count-orders"></span>
+  </button>
+  <button class="db-tab" id="tab-query_history"        onclick="switchTable('query_history')">
+    <span class="db-tab-icon">&#128221;</span> Query History
+    <span class="db-tab-count" id="count-query_history"></span>
+  </button>
+  <!-- Uploaded tables injected here by JS -->
+  <div class="db-tab-separator hidden" id="tabSeparator"></div>
+  <a href="/upload" class="db-tab db-tab-import" title="Import new data">
+    <span class="db-tab-icon">&#128229;</span> Import Data
+  </a>
+</div>
+
+<!-- Main Layout -->
+<div class="db-main-layout">
+
+  <!-- Left: Data Table -->
+  <div class="db-panel db-panel-main">
+    <!-- Toolbar -->
+    <div class="db-toolbar">
+      <div class="db-toolbar-left">
+        <span class="db-table-badge" id="tableBadge">users</span>
+        <span class="db-row-count" id="visibleCount"></span>
+        <span class="db-readonly-pill hidden" id="readonlyPill">&#128274; Read-only</span>
+      </div>
+      <div class="db-toolbar-right">
+        <div class="db-search-wrap">
+          <span class="db-search-icon">&#128269;</span>
+          <input type="text" id="searchInput" class="db-search" placeholder="Search…" oninput="filterTable()">
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="loadCurrentTable()" title="Refresh">&#8635;</button>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="db-table-wrap" id="tableWrap">
+      <div class="db-loading-state" id="tableLoading">
+        <div class="spinner"></div><span>Loading data…</span>
+      </div>
+      <table class="db-table" id="dbTable" style="display:none;">
+        <thead><tr id="tableHead"></tr></thead>
+        <tbody id="dbTableBody"></tbody>
+      </table>
+      <div class="db-empty-state hidden" id="emptyState">
+        <div style="font-size:2.5rem;margin-bottom:.5rem;">&#128202;</div>
+        <div>No rows match your search.</div>
+      </div>
+      <div class="db-dropped-state hidden" id="droppedState">
+        <div style="font-size:2.8rem;margin-bottom:.75rem;">&#128683;</div>
+        <div style="color:var(--red);font-weight:700;font-size:1.1rem;margin-bottom:.4rem;">Table Does Not Exist</div>
+        <div style="color:var(--text-muted);font-size:.9rem;margin-bottom:1.25rem;">
+          The <code id="droppedTableName" style="color:var(--yellow);background:rgba(210,153,34,.15);padding:.1rem .4rem;border-radius:4px;"></code>
+          table was dropped and is no longer available in the database.
+        </div>
+        <button class="btn btn-danger" id="restoreBtn" onclick="restoreDatabase()">&#8635; Restore All Tables</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: Sidebar -->
+  <div class="db-sidebar">
+    <div class="db-panel db-panel-schema">
+      <div class="db-panel-header">
+        <span class="db-panel-title">&#128196; Schema Snapshot</span>
+        <span class="db-schema-badge">CREATE TABLE</span>
+      </div>
+      <pre class="db-schema-sql" id="schemaSql">Loading…</pre>
+      <div class="db-columns-list" id="columnsList"></div>
+    </div>
+
+    <div class="db-panel db-panel-log">
+      <div class="db-panel-header">
+        <span class="db-panel-title">&#128221; Activity Log</span>
+        <button class="btn-ghost" onclick="clearLog()">Clear</button>
+      </div>
+      <div class="db-log" id="activityLog">
+        <div class="db-log-entry db-log-info">Session started</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ── Add User Modal ─────────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="addModal" onclick="closeModalOutside(event,'addModal',closeAddModal)">
+  <div class="modal-box" id="addModalBox">
+    <div class="modal-header">
+      <h2 class="modal-title">&#128100; Add New User</h2>
+      <button class="modal-close" onclick="closeAddModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-form-grid">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" id="newName" class="form-input" placeholder="e.g. Jane Doe" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="newEmail" class="form-input" placeholder="e.g. jane@example.com" autocomplete="off">
+        </div>
+      </div>
+      <div class="modal-error hidden" id="addError"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeAddModal()">Cancel</button>
+      <button class="btn btn-primary" id="addSubmitBtn" onclick="submitAdd()">Add User</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Edit User Modal ────────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="editModal" onclick="closeModalOutside(event,'editModal',closeEditModal)">
+  <div class="modal-box" id="editModalBox">
+    <div class="modal-header">
+      <h2 class="modal-title">&#9998; Edit User <span id="editUserId" class="modal-id-badge"></span></h2>
+      <button class="modal-close" onclick="closeEditModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-form-grid">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" id="editName" class="form-input" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" id="editEmail" class="form-input" autocomplete="off">
+        </div>
+      </div>
+      <div class="modal-error hidden" id="editError"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" id="editBtn" onclick="submitEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Delete Confirm Modal ───────────────────────────────────── -->
+<div class="modal-overlay hidden" id="deleteModal" onclick="closeModalOutside(event,'deleteModal',closeDeleteModal)">
+  <div class="modal-box modal-box-sm">
+    <div class="modal-header">
+      <h2 class="modal-title" style="color:var(--red);">&#128683; Confirm Delete</h2>
+      <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p style="color:var(--text-muted);font-size:.95rem;line-height:1.6;">
+        You are about to permanently delete
+        <strong id="deleteUserName" style="color:var(--text-primary);"></strong>.
+        This action <strong style="color:var(--red);">cannot be undone</strong>.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
+      <button class="btn btn-danger" id="deleteConfirmBtn" onclick="confirmDelete()">&#128465; Delete</button>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+{% block scripts %}
+<script src="{{ url_for('static', filename='database.js') }}"></script>
+{% endblock %}
