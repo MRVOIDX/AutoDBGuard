@@ -366,7 +366,7 @@ AutoDBGuard/
 
 # 👨‍💻 Author
 
-### Mohamed Lakhtiri
+### Oussama Lakhtiri
 
 GitHub: https://github.com/mrvoidx
 
